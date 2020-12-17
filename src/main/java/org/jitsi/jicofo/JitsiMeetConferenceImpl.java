@@ -333,6 +333,7 @@ public class JitsiMeetConferenceImpl
     public synchronized void start()
         throws Exception
     {
+        logger.info("***** start() : 각종 핸들러들 등록");
         if (started)
         {
             return;
@@ -364,6 +365,7 @@ public class JitsiMeetConferenceImpl
             BridgeSelector bridgeSelector = services.getBridgeSelector();
             bridgeSelector.addHandler(bridgeSelectorEventHandler);
 
+            logger.info("protocolProviderHandler.isRegistered() = " + protocolProviderHandler.isRegistered() + " <--- true면 joinTheRoom()으로");
             if (protocolProviderHandler.isRegistered())
             {
                 joinTheRoom();
@@ -511,6 +513,7 @@ public class JitsiMeetConferenceImpl
     private void joinTheRoom()
         throws Exception
     {
+        logger.info("***** joinTheRoom()");
         logger.info("Joining the room: " + roomName);
 
         chatRoom = (ChatRoom2) chatOpSet.findRoom(roomName.toString());
@@ -613,6 +616,8 @@ public class JitsiMeetConferenceImpl
      */
     protected void onMemberJoined(final XmppChatMember chatRoomMember)
     {
+        logger.info("***** onMemberJoined(chatRoomMember=" + chatRoomMember);
+
         synchronized (participantLock)
         {
             logger.info("Member " + chatRoomMember.getContactAddress() + " joined.");
@@ -676,6 +681,8 @@ public class JitsiMeetConferenceImpl
      */
     private void inviteChatMember(XmppChatMember chatRoomMember, boolean justJoined)
     {
+        logger.info("***** inviteChatMemeber(chatRoomMember="+chatRoomMember+", justJoined="+justJoined);
+
         synchronized (participantLock)
         {
             if (isFocusMember(chatRoomMember))
@@ -786,6 +793,8 @@ public class JitsiMeetConferenceImpl
             boolean reInvite,
             boolean[] startMuted)
     {
+        logger.info("***** inviteParticipant(participant, reInvite="+reInvite+", startMuted="+startMuted+") / participant="+participant);
+
         BridgeSession bridgeSession;
 
         // Some of the bridges in the conference may have become non-operational. Inviting a new participant to the
@@ -1191,6 +1200,8 @@ public class JitsiMeetConferenceImpl
      */
     protected void onMemberLeft(ChatRoomMember chatRoomMember)
     {
+        logger.info("***** onMemberLeft(chatRoomMember="+chatRoomMember+")");
+
         synchronized (participantLock)
         {
             String contactAddress = chatRoomMember.getContactAddress();
@@ -1228,6 +1239,8 @@ public class JitsiMeetConferenceImpl
             String message,
             boolean sendSessionTerminate)
     {
+        logger.info("terminateParticipant(participant, reason, message, sendSessionTerminate)");
+
         logger.info(String.format(
                 "Terminating %s, reason: %s, send st: %s",
                 participant,
@@ -2222,6 +2235,8 @@ public class JitsiMeetConferenceImpl
      */
     boolean handleMuteRequest(Jid fromJid, Jid toBeMutedJid, boolean doMute)
     {
+        logger.info("***** handleMuteRequest(fromJid="+fromJid+", toBeMutedJid="+toBeMutedJid+", doMute="+doMute+")");
+
         Participant principal = findParticipantForRoomJid(fromJid);
         if (principal == null)
         {

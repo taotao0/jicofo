@@ -106,6 +106,7 @@ public class TranscriberManager
      */
     public void init()
     {
+        logger.info("***** init() : transcriberManager");
         if(executorService != null)
         {
             executorService.shutdown();

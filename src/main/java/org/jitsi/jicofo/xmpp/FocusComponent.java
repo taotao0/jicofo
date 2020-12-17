@@ -204,9 +204,11 @@ public class FocusComponent
     public IQ handleIQSetImpl(IQ iq)
         throws Exception
     {
+        logger.info("***** handleIQSetImpl(iq) / iq = "+iq.toString());
         try
         {
             org.jivesoftware.smack.packet.IQ smackIq = IQUtils.convert(iq);
+            logger.info("xmpp iq -> smack iq 변환\n ---> "+smackIq);
 
             if (smackIq instanceof ConferenceIq)
             {
@@ -302,12 +304,15 @@ public class FocusComponent
             ConferenceIq query)
         throws Exception
     {
+        logger.info("***** handleConferenceIq(query) / query = " + query);
+
         ConferenceIq response = new ConferenceIq();
         EntityBareJid room = query.getRoom();
 
         logger.info("Focus request for room: " + room);
 
         boolean roomExists = focusManager.getConference(room) != null;
+        logger.info("roomExists = "+roomExists);
 
         // Authentication and reservations system logic
         org.jivesoftware.smack.packet.IQ error = processExtensions(query, response, roomExists);
@@ -317,11 +322,13 @@ public class FocusComponent
         }
 
         boolean ready = focusManager.conferenceRequest(room, query.getPropertiesMap());
+        logger.info("ready = " + ready);
 
         if (!isFocusAnonymous && authAuthority == null)
         {
             // Focus is authenticated system admin, so we let them in
             // immediately. Focus will get OWNER anyway.
+            logger.info("(!isFocusAnonymous && authAuthority == null) == true면 ready = true;");
             ready = true;
         }
 
@@ -354,6 +361,7 @@ public class FocusComponent
             response.addProperty(new ConferenceIq.Property("sipGatewayEnabled", "true"));
         }
 
+        logger.info("response = " + response);
         return response;
     }
 

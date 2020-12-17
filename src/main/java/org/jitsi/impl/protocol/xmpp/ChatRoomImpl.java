@@ -223,6 +223,8 @@ public class ChatRoomImpl
     {
         try
         {
+            logger.info("***** joinAs (nickname = " + nickname + ")");
+
             this.myResourcepart = Resourcepart.from(nickname);
             this.myOccupantJid = JidCreate.entityFullFrom(roomJid,
                                                           myResourcepart);
@@ -484,6 +486,8 @@ public class ChatRoomImpl
                                         ChatRoomMemberRole newRole,
                                         boolean isInitial)
     {
+        logger.info("***** fireLocalUserRoleEvent(previousRole=" + previousRole + ", newRole=" + newRole + "isInitial=" + isInitial);
+
         ChatRoomLocalUserRoleChangeEvent evt
             = new ChatRoomLocalUserRoleChangeEvent(
                 this, previousRole, newRole, isInitial);
@@ -909,6 +913,8 @@ public class ChatRoomImpl
 
     private void notifyMemberJoined(ChatMemberImpl member)
     {
+        logger.info("notifyMemberJoined(member)");
+
         ChatRoomMemberPresenceChangeEvent event
             = new ChatRoomMemberPresenceChangeEvent(
                     this, member,
@@ -919,6 +925,8 @@ public class ChatRoomImpl
 
     private void notifyMemberLeft(ChatMemberImpl member)
     {
+        logger.info("***** notifyMemberLeft(member="+member+")");
+
         ChatRoomMemberPresenceChangeEvent event
             = new ChatRoomMemberPresenceChangeEvent(
                     this, member,
@@ -929,6 +937,8 @@ public class ChatRoomImpl
 
     private void notifyMemberKicked(ChatMemberImpl member)
     {
+        logger.info("***** notifyMemberKicked(member="+member+")");
+
         ChatRoomMemberPresenceChangeEvent event
             = new ChatRoomMemberPresenceChangeEvent(
                     this, member,
@@ -939,6 +949,9 @@ public class ChatRoomImpl
 
     private void notifyMemberPropertyChanged(ChatMemberImpl member)
     {
+        if(!member.getPresence().getFrom().toString().contains("jvbbrewery")){
+            logger.info("***** notifyMemberPropertyChanged(member) / member = " + member);
+        }
         ChatRoomMemberPropertyChangeEvent event
             = new ChatRoomMemberPropertyChangeEvent(
                     member, this,
@@ -1070,6 +1083,8 @@ public class ChatRoomImpl
      */
     private ChatMemberImpl addMember(EntityFullJid jid)
     {
+        logger.info("***** addMember(jid="+jid+")");
+
         synchronized (members)
         {
             if (members.containsKey(jid))
@@ -1115,6 +1130,8 @@ public class ChatRoomImpl
      */
     private void processOwnPresence(Presence presence)
     {
+        logger.info("***** processOwnPresence(presence)");
+
         MUCUser mucUser = getMUCUserExtension(presence);
 
         if (mucUser != null)
@@ -1158,6 +1175,10 @@ public class ChatRoomImpl
      */
     private void processOtherPresence(Presence presence)
     {
+        if(!presence.getFrom().toString().contains("jvbbrewery")){
+            logger.info("***** processOtherPresence(presence)");
+        }
+
         EntityFullJid jid
             = presence.getFrom().asEntityFullJidIfPossible();
         if (jid == null)
@@ -1174,6 +1195,10 @@ public class ChatRoomImpl
         synchronized (members)
         {
             chatMember = (ChatMemberImpl) findChatMember(jid);
+            if(!presence.getFrom().toString().contains("jvbbrewery")){
+                logger.info("chatMember = " + chatMember);
+            }
+
             if (chatMember == null)
             {
                 if (presence.getType().equals(Presence.Type.available))
@@ -1233,6 +1258,13 @@ public class ChatRoomImpl
     @Override
     public void processPresence(Presence presence)
     {
+        if(!presence.getFrom().toString().contains("jvbbrewery")){
+            logger.info("***** processPresence(presence)\n ---> "+presence.toString()
+                    + "\n packet Extensions ===> " + presence.toXML());
+            //logger.info("packetExtensions > nick : " + presence.getExtension("nick", "http://jabber.org/protocol/nick").toXML());
+
+        }
+
         if (presence == null || presence.getError() != null)
         {
             logger.warn("Unable to handle packet: " +
@@ -1252,6 +1284,9 @@ public class ChatRoomImpl
                 "Processing presence when we're not aware of our address");
         }
 
+        if(!presence.getFrom().toString().contains("jvbbrewery")){
+            logger.info(myOccupantJid + " == " + presence.getFrom()+" <--- myOccupantJid랑 presence.getFrom() 같으면 own 다르면 other");
+        }
         if (myOccupantJid != null && myOccupantJid.equals(presence.getFrom()))
         {
             processOwnPresence(presence);
@@ -1287,9 +1322,12 @@ public class ChatRoomImpl
 
         private ChatMemberImpl removeMember(EntityFullJid occupantJid)
         {
+            logger.info("***** removeMember(occupantJid="+occupantJid+")");
+
             synchronized (members)
             {
                 ChatMemberImpl removed = members.remove(occupantJid);
+                logger.info("members.remove(occupantJid);");
 
                 if (removed == null)
                 {
@@ -1297,6 +1335,7 @@ public class ChatRoomImpl
                 }
 
                 memberCount--;
+                logger.info("memberCount--; = "+memberCount);
 
                 return removed;
             }
@@ -1309,6 +1348,8 @@ public class ChatRoomImpl
         @Override
         public void left(EntityFullJid occupantJid)
         {
+            logger.info("***** left(occupantJid="+occupantJid+")");
+
             ChatMemberImpl member;
 
             synchronized (members)
@@ -1336,6 +1377,7 @@ public class ChatRoomImpl
         @Override
         public void kicked(EntityFullJid occupantJid, Jid actor, String reason)
         {
+            logger.info("***** kicked(occupantJid="+occupantJid+", actor="+actor+", reason="+reason+")");
             ChatMemberImpl member;
 
             synchronized (members)

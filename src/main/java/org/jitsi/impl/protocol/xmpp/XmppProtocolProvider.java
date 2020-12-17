@@ -602,9 +602,12 @@ public class XmppProtocolProvider
         @Override
         public void sendStanza(Stanza packet)
         {
+
+            logger.info("***** sendStanza(packet="+packet+")");
             Objects.requireNonNull(packet, "packet");
             try
             {
+                logger.info("connection.sendStanza(packet);");
                 connection.sendStanza(packet);
             }
             catch (NotConnectedException e)

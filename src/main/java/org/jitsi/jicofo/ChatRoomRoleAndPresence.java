@@ -140,15 +140,18 @@ public class ChatRoomRoleAndPresence
     @Override
     public void memberPresenceChanged(ChatRoomMemberPresenceChangeEvent evt)
     {
+        logger.info("***** memberPresenceChanged(evt)");
         logger.info("Chat room event " + evt);
 
         XmppChatMember sourceMember = (XmppChatMember)evt.getChatRoomMember();
 
         String eventType = evt.getEventType();
+        logger.info("eventType = "+eventType);
         if (ChatRoomMemberPresenceChangeEvent.MEMBER_JOINED.equals(eventType))
         {
             if (owner == null)
             {
+                logger.info("owner == null");
                 electNewOwner();
             }
             if (authAuthority != null)
@@ -188,6 +191,9 @@ public class ChatRoomRoleAndPresence
      */
     private void electNewOwner()
     {
+        logger.info("***** electNewOwner()");
+        logger.info("autoOwner = " + autoOwner + " / focusRole = " + focusRole);
+
         if (!autoOwner)
             return;
 
@@ -284,6 +290,8 @@ public class ChatRoomRoleAndPresence
     @Override
     public void localUserRoleChanged(ChatRoomLocalUserRoleChangeEvent evt)
     {
+        logger.info("***** localUserRoleChanged(evt) / evt = " + evt);
+
         if (logger.isDebugEnabled())
         {
             logger.debug(
@@ -293,6 +301,8 @@ public class ChatRoomRoleAndPresence
         }
 
         focusRole = evt.getNewRole();
+        logger.info("focusRole = " + focusRole);
+
         if (!verifyFocusRole())
         {
             return;
@@ -300,6 +310,7 @@ public class ChatRoomRoleAndPresence
 
         if (evt.isInitial() && owner == null)
         {
+            logger.info("evt.isInitial() && owner == null && autoAuthority = " + authAuthority);
             if (authAuthority != null)
             {
                 grantOwnersToAuthUsers();

@@ -252,6 +252,10 @@ public class ChatMemberImpl
      */
     void processPresence(Presence presence)
     {
+        if(!presence.getFrom().toString().contains("jvbbrewery")){
+            logger.info("***** processPresence (preocess)");
+        }
+
         if (!occupantJid.equals(presence.getFrom()))
         {
             throw new IllegalArgumentException(

@@ -100,6 +100,7 @@ public class MeetExtensionsHandler
         @Override
         public IQ handleIQRequest(IQ iqRequest)
         {
+            logger.info("***** handleIQRequest(iqRequest) / iqRequest = \n ---> " + iqRequest);
             return handleMuteIq((MuteIq) iqRequest);
         }
     }
@@ -149,6 +150,9 @@ public class MeetExtensionsHandler
 
     private IQ handleMuteIq(MuteIq muteIq)
     {
+        logger.info("***** handleMuteIq(muteIq="+muteIq+")");
+        logger.info ("jid = " + muteIq.getJid());
+
         Boolean doMute = muteIq.getMute();
         Jid jid = muteIq.getJid();
 
@@ -180,6 +184,7 @@ public class MeetExtensionsHandler
 
                 muteStatusUpdate.setMute(doMute);
 
+                logger.info("muteStatusUpdate = packet = " + muteStatusUpdate);
                 connection.sendStanza(muteStatusUpdate);
             }
         }
@@ -188,6 +193,7 @@ public class MeetExtensionsHandler
             result = IQ.createErrorResponse(muteIq, XMPPError.getBuilder(XMPPError.Condition.internal_server_error));
         }
 
+        logger.info("return result="+result.toString());
         return result;
     }
 

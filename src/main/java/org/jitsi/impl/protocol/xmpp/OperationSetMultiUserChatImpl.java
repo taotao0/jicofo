@@ -19,6 +19,7 @@ package org.jitsi.impl.protocol.xmpp;
 
 import net.java.sip.communicator.service.protocol.*;
 
+import org.jitsi.utils.logging.Logger;
 import org.jivesoftware.smack.*;
 import org.jxmpp.jid.*;
 import org.jxmpp.jid.impl.*;
@@ -35,6 +36,11 @@ import java.util.*;
 public class OperationSetMultiUserChatImpl
     extends AbstractOperationSetMultiUserChat
 {
+    /**
+     * The logger used by this class.
+     */
+    private final static Logger logger = Logger.getLogger(ChatRoomImpl.class);
+
     /**
      * Parent protocol provider.
      */
@@ -96,6 +102,8 @@ public class OperationSetMultiUserChatImpl
                                    Map<String, Object> roomProperties)
         throws OperationFailedException, OperationNotSupportedException
     {
+        logger.info("***** createChatRoom(roomName="+roomName+", roomProperties="+roomProperties+")");
+
         EntityBareJid roomJid;
         try
         {
@@ -122,6 +130,7 @@ public class OperationSetMultiUserChatImpl
 
             rooms.put(newRoom.getName(), newRoom);
 
+            logger.info("return newRoom="+newRoom+")");
             return newRoom;
         }
     }
@@ -133,12 +142,14 @@ public class OperationSetMultiUserChatImpl
     public ChatRoom findRoom(String roomName)
         throws OperationFailedException, OperationNotSupportedException
     {
+        logger.info("***** findRoom(roomName="+roomName+")");
         roomName = roomName.toLowerCase();
 
         synchronized (rooms)
         {
             ChatRoom room = rooms.get(roomName);
 
+            logger.info("room == "+room+" <--- null이면 createChatRoom");
             if (room == null)
             {
                 room = createChatRoom(roomName, null);

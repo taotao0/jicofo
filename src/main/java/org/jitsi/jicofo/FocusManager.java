@@ -299,6 +299,8 @@ public class FocusManager
             boolean                includeInStatistics)
         throws Exception
     {
+        logger.info("***** conferenceRequest");
+
         if (room == null)
             return false;
 
@@ -308,6 +310,7 @@ public class FocusManager
         {
             conference = conferences.get(room);
             isConferenceCreator = conference == null;
+            logger.info("(conference == null) = "+isConferenceCreator + " <--- true면 conference 생성하러 감");
             if (isConferenceCreator)
             {
                 conference = createConference(room, properties, loggingLevel, includeInStatistics);
@@ -339,6 +342,7 @@ public class FocusManager
         }
 
 
+        logger.info("return conference.isInTheRoom()="+conference.isInTheRoom());
         return conference.isInTheRoom();
     }
 
@@ -360,6 +364,7 @@ public class FocusManager
             EntityBareJid room, Map<String, String> properties,
             Level logLevel, boolean includeInStatistics)
     {
+        logger.info("***** createConference(room="+room+", properties="+properties+", logLevel="+logLevel+", includeInStatistics="+includeInStatistics+")");
         JitsiMeetConfig config = new JitsiMeetConfig(properties);
 
         JitsiMeetConferenceImpl conference;
@@ -403,6 +408,7 @@ public class FocusManager
             logger.info(sb);
         }
 
+        logger.info("return conference="+conference);
         return conference;
     }
 
@@ -458,6 +464,7 @@ public class FocusManager
     @Override
     public void conferenceEnded(JitsiMeetConferenceImpl conference)
     {
+        logger.info("***** conferenceEnded(conference");
         EntityBareJid roomName = conference.getRoomName();
 
         synchronized (conferencesSyncRoot)
