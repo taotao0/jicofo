@@ -620,7 +620,7 @@ public class JitsiMeetConferenceImpl
 
         synchronized (participantLock)
         {
-            logger.info("Member " + chatRoomMember.getContactAddress() + " joined.");
+            logger.info("Member " + chatRoomMember.getContactAddress() + " joined. (ver. usee)");
             getFocusManager().getStatistics().totalParticipants.incrementAndGet();
 
             if (!isFocusMember(chatRoomMember))
