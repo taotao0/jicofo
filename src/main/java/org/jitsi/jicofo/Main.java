@@ -25,6 +25,7 @@ import org.jitsi.jicofo.osgi.*;
 import org.jitsi.jicofo.xmpp.*;
 import org.jitsi.meet.*;
 import org.jitsi.metaconfig.*;
+import org.jitsi.usee.rest.RestConfig;
 import org.jitsi.utils.*;
 import org.jitsi.utils.logging.*;
 import org.osgi.framework.*;
