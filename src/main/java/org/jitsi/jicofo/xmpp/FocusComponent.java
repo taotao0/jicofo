@@ -17,6 +17,29 @@
  */
 package org.jitsi.jicofo.xmpp;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.HttpParams;
+import org.apache.http.ssl.SSLContexts;
+import org.apache.http.ssl.TrustStrategy;
+import org.apache.http.util.EntityUtils;
+import org.eclipse.jetty.http.HttpHeader;
 import org.jetbrains.annotations.*;
 import org.jitsi.retry.RetryStrategy;
 import org.jitsi.retry.SimpleRetryTask;
@@ -32,10 +55,25 @@ import org.jitsi.xmpp.util.*;
 import org.jivesoftware.smack.packet.*;
 
 import org.jivesoftware.whack.ExternalComponentManager;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.jxmpp.jid.*;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
 
+import javax.net.ssl.SSLContext;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -311,6 +349,44 @@ public class FocusComponent
 
         logger.info("Focus request for room: " + room);
 
+        List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+        //postParams.add(new BasicNameValuePair("room", "eyJhbGciOiJIUzI1NiJ9.eyJyb29tX2lkIjoiZWQ4NTAwMmEtMzMwMC00ZWY0LWJiMjUtNzVkMzc1ZTRiZjc2IiwiaWF0IjoxNjA5OTA5MDY5LCJleHAiOjE2MDk5MTI2Njl9.UVKoUejS5IykqX6pycf7KK5ig62UL56K4H82wShOE-E"));
+        postParams.add(new BasicNameValuePair("room", room.getLocalpart().toString()));
+
+        String resultStr = restPost("https://10.0.0.16:8080/Room/Check/RoomToken/Test", postParams);
+
+        log.info("===================" + resultStr);
+
+        if(resultStr.equals("fail")) {
+            response.setType(org.jivesoftware.smack.packet.IQ.Type.result);
+            response.setStanzaId(query.getStanzaId());
+            response.setFrom(query.getTo());
+            response.setTo(query.getFrom());
+            response.setRoom(query.getRoom());
+            response.setReady(false);
+
+            response.setFocusJid(focusAuthJid);
+            response.addProperty(
+                    new ConferenceIq.Property(
+                            "authentication",
+                            String.valueOf(authAuthority != null)));
+
+            if (authAuthority != null)
+            {
+                response.addProperty(
+                        new ConferenceIq.Property(
+                                "externalAuth",
+                                String.valueOf(authAuthority.isExternal())));
+            }
+
+            if (focusManager.getJitsiMeetServices().getJigasiDetector() != null)
+            {
+                response.addProperty(new ConferenceIq.Property("sipGatewayEnabled", "true"));
+            }
+
+            return response;
+        }
+
         boolean roomExists = focusManager.getConference(room) != null;
         logger.info("roomExists = "+roomExists);
 
@@ -364,6 +440,66 @@ public class FocusComponent
         logger.info("response = " + response);
         return response;
     }
+
+    private String restPost(String requestURL, List<NameValuePair> postParam) {
+
+        String result = null;
+
+        try {
+            TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
+
+            SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(acceptingTrustStrategy).build();
+
+            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(
+              sslContext,
+              new String[] {"TLSv1", "TLSv1.1", "TLSv1.2"},
+              null,
+              SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+
+
+            CloseableHttpClient httpClient = HttpClients.custom()
+                    .setSSLSocketFactory(sslsf)
+                    .build();
+
+            HttpPost postRequest = new HttpPost(requestURL);
+
+            HttpEntity httpEntity = new UrlEncodedFormEntity(postParam, "UTF8");
+
+            postRequest.setEntity(httpEntity);
+            CloseableHttpResponse response = httpClient.execute(postRequest);
+
+
+            if(response.getStatusLine().getStatusCode() == 200) {
+
+                ResponseHandler<String> handler = new BasicResponseHandler();
+                String body = handler.handleResponse(response);
+
+                JSONParser jsonParser = new JSONParser();
+                Object obj = jsonParser.parse(body);
+                JSONObject jsonObject = (JSONObject) obj;
+
+                String state = (String) jsonObject.get("state");
+                String msg = (String) jsonObject.get("msg");
+                String roomName = (String) jsonObject.get("roomName");
+
+                result = state;
+            } else {
+                result = null;
+            }
+
+        } catch (UnsupportedEncodingException e) {
+            log.info("UnsupportedEncodingException Occurred");
+            result = null;
+        } catch (IOException e) {
+            log.info("IO Exception Occurred");
+            result = null;
+        } catch (Exception e) {
+            log.info("IO Exception Occurred");
+            result = null;
+        } 
+        return result;
+    }
+
 
     private org.jivesoftware.smack.packet.IQ handleAuthUrlIq(
             LoginUrlIq authUrlIq)
