@@ -496,7 +496,7 @@ public class FocusComponent
         } catch (Exception e) {
             log.info("IO Exception Occurred");
             result = null;
-        } 
+        }
         return result;
     }
 
